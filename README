@@ -33,7 +33,7 @@ begin
         pdf.openpdf;
         pdf.AddPage();
         pdf.SetFont('Arial','B',16);
-      img := 'http://www.laclasse.com/v2/images/picto_laclassev2.png';
+      img := 'http://www.laclasse.com/v25/images/logo-laclasse.gif';
       pdf.Image(img,1, 1, 10);
       pdf.Output();
 end testImg;
