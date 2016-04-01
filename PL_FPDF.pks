@@ -55,6 +55,7 @@ procedure Triangle(px in number, py in number, psize in number,
 procedure SetLineDashPattern(pdash in varchar2 default '[] 0');
 
 -- FPDF public methods
+procedure Ln(h number default null);
 function  GetX return number;
 procedure SetX(px in number);
 function  GetY return number;
