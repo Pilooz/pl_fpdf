@@ -1945,6 +1945,18 @@ begin
 end GetCurrentFontFamily;
 
 ----------------------------------------------------------------------------------------
+procedure Ln(h number default null) is
+begin
+	-- Line feed; default value is last cell height
+	x :=lMargin;
+	if(is_string(h)) then
+		y:= y + lasth;
+	else
+		y:= y + h;
+    end if; 
+end Ln;
+
+----------------------------------------------------------------------------------------
 function GetX return number is
 begin
 	-- Get x position
