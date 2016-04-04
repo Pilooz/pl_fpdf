@@ -7,8 +7,8 @@ CREATE OR REPLACE PACKAGE BODY PL_FPDF AS
 * Licence :  GPL                                                               *
 *                                                                              *
 ********************************************************************************
-* Cette librairie PL/SQL est un portage de la version 1.53 de FPDF, célèbre    *
-* classe PHP développée par Olivier PLATHEY (http://www.fpdf.org/)             *
+* Cette librairie PL/SQL est un portage de la version 1.53 de FPDF, cÃ©lÃ¨bre    *
+* classe PHP dÃ©veloppÃ©e par Olivier PLATHEY (http://www.fpdf.org/)             *
 ********************************************************************************
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,11 +51,11 @@ subtype txt is varchar2(32767); -- old value: 2000 bug: ORA-20100:
 subtype bigtext is varchar2(32767);
 subtype margin is number;
 
--- type tv1 is table of varchar2(1) index by binary_integer;
-type tbool is table of boolean index by binary_integer;
-type tn is table of number index by binary_integer;
-type tv4000 is table of varchar2(4000) index by binary_integer;
-type tv32k is table of varchar2(32767) index by binary_integer;
+-- type tv1 is table of varchar2(1) index by pls_integer;
+type tbool is table of boolean index by pls_integer;
+type tn is table of number index by pls_integer;
+type tv4000 is table of varchar2(4000) index by pls_integer;
+type tv32k is table of varchar2(32767) index by pls_integer;
 
 type charSet is table of pls_integer index by car;
 
@@ -139,8 +139,7 @@ type ArrayCharWidths is table of charSet index by word;
  lasth number;              -- height of last cell printed 
  LineWidth number;          -- line width in user unit
  CoreFonts tv4000a;          	-- array of standard font names
- fonts fontsArray;  
-                                -- array of used fonts
+ fonts fontsArray;            -- array of used fonts
  FontFiles fontsArray;          	-- array of font files
  diffs tv4000;              	-- array of encoding differences 
  images imagesArray;             	-- array of used images
@@ -170,7 +169,7 @@ type ArrayCharWidths is table of charSet index by word;
  AliasNbPages word;       	-- alias for total number of pages
  PDFVersion word;         	-- PDF version number
  
- -- Proprietés ajoutées lors du portage en PLSQL.
+ -- ProprietÃ©s ajoutÃ©es lors du portage en PLSQL.
  fpdf_charwidths ArrayCharWidths;		-- Characters table.
  MyHeader_Proc txt;						-- Personal Header procedure.
  MyHeader_ProcParam tv4000a;            -- Table of parameters of the personal header Proc.
@@ -181,7 +180,7 @@ type ArrayCharWidths is table of charSet index by word;
  Linespacing number;
  
  -- variables dont je ne maitrise pas bien l'emploi.
- -- A vérifier au court de la validation du portage.
+ -- A vÃ©rifier au court de la validation du portage.
  originalsize word;
  size1 word;
  size2 word;
@@ -191,9 +190,9 @@ type ArrayCharWidths is table of charSet index by word;
 *                                                                              *
 *******************************************************************************/
 ----------------------------------------------------------------------------------
--- proc. and func. spécifiques ajoutées au portage.
+-- proc. and func. spÃ©cifiques ajoutÃ©es au portage.
 ----------------------------------------------------------------------------------
-procedure print (pstr varchar2) is
+procedure print (pstr in varchar2) is
 begin
   -- Choose the output mode...
   htp.p(pstr);
@@ -206,10 +205,8 @@ end print;
 -- Testing if method for additionnal fonts exists in this package
 -- lv_existing_methods MUST reference all the "p_put..." procedure of the package.
 ----------------------------------------------------------------------------------
-function methode_exists(pMethodName varchar2) return boolean is
-lv_existing_methods varchar2(2000) 
-:= 'p_putstream,p_putxobjectdict,p_putresourcedict,p_putfonts,p_putimages,p_putresources,'||
-   'p_putinfo,p_putcatalog,p_putheader,p_puttrailer,p_putpages';
+function methode_exists(pMethodName in varchar2) return boolean is
+lv_existing_methods varchar2(200) := 'p_putstream,p_putxobjectdict,p_putresourcedict,p_putfonts,p_putimages,p_putresources,p_putinfo,p_putcatalog,p_putheader,p_puttrailer,p_putpages';
 begin
    if (instr(lv_existing_methods, lower(pMethodName) ) > 0 ) then
      return true;
@@ -474,9 +471,9 @@ begin
 end getFontZapfdingbats;
 
 ----------------------------------------------------------------------------------
--- Inclusion des métriques d'une font.
+-- Inclusion des mÃ©triques d'une font.
 ----------------------------------------------------------------------------------
-procedure p_includeFont (pfontname varchar2) is
+procedure p_includeFont (pfontname in varchar2) is
 mySet charSet;
 begin
   if (pfontname is not null) then 
@@ -524,9 +521,9 @@ end p_includeFont;
 
 
 ----------------------------------------------------------------------------------
--- p_getFontMetrics : récupérer les metric d'une font.
+-- p_getFontMetrics : rÃ©cupÃ©rer les metric d'une font.
 ----------------------------------------------------------------------------------
-function p_getFontMetrics(pFontName varchar2) return charSet is
+function p_getFontMetrics(pFontName in varchar2) return charSet is
 mySet charSet;
 begin
   if (pfontname is not null) then 
@@ -570,10 +567,10 @@ begin
 end p_getFontMetrics;
 
 ----------------------------------------------------------------------------------
--- Parcours le tableau des images et renvoie true si l'image cherché existe 
+-- Parcours le tableau des images et renvoie true si l'image cherchÃ© existe 
 -- dans le tableau.
 ----------------------------------------------------------------------------------
-function imageExists(pFile varchar2) return boolean is
+function imageExists(pFile in varchar2) return boolean is
 begin
   if (images.exists(lower(pFile))) then
      return true;
@@ -587,9 +584,9 @@ end imageExists;
 
 ----------------------------------------------------------------------------------
 -- Parcours le tableau des charwidths et renvoie true si il existe pour la font
--- donnée.
+-- donnÃ©e.
 ----------------------------------------------------------------------------------
-function fpdf_charwidthsExists(pFontName varchar2) return boolean is
+function fpdf_charwidthsExists(pFontName in varchar2) return boolean is
 chTab charSet;
 begin
   if (fpdf_charwidths.exists(pFontName)) then
@@ -606,9 +603,10 @@ end fpdf_charwidthsExists;
 
 ----------------------------------------------------------------------------------
 -- Parcours le tableau des fonts et renvoie true si il existe pour la font
--- donnée.
+-- donnÃ©e.
 ----------------------------------------------------------------------------------
-function fontsExists(pFontName varchar2) return boolean is
+/*
+function fontsExists(pFontName in varchar2) return boolean is
 ft word;
 begin
   if (fonts.exists(pFontName)) then
@@ -622,12 +620,13 @@ exception
   when others then
     return false;
 end fontsExists;
+*/
 
 --------------------------------------------------------------------------------
 -- get an image in a blob from an http url.
 -- The image is converted  on the fly to PNG format.
 --------------------------------------------------------------------------------
-function getImageFromUrl(p_Url varchar2) return ordsys.ordImage is
+function getImageFromUrl(p_Url in varchar2) return ordsys.ordImage is
 	myImg ordsys.ordImage; 
 	lv_url varchar2(2000) := p_Url;
 	urityp URIType;
@@ -667,11 +666,13 @@ end getImageFromUrl;
 --------------------------------------------------------------------------------
 -- get an image in a blob from an oracle table.
 --------------------------------------------------------------------------------
-function getImageFromDatabase(pFile varchar2) return ordsys.ordImage is
+/*
+function getImageFromDatabase(pFile in varchar2) return ordsys.ordImage is
   myImg ordsys.ordImage := ordsys.ordImage.init();
 begin
   return myImg;
 end getImageFromDatabase;
+*/
 
 --------------------------------------------------------------------------------
 -- Enables debug infos
@@ -710,17 +711,17 @@ end GetLineSpacing;
 --------------------------------------------------------------------------------
 -- sets the Linespacing property
 --------------------------------------------------------------------------------
-Procedure SetLineSpacing (pls number) is
+Procedure SetLineSpacing (pls in number) is
 begin
     -- Set LineSpacing property
     LineSpacing := pls;
 end SetLineSpacing;
 
 ----------------------------------------------------------------------------------
--- Compatibilité PHP -> PLSQL : proc. and func. spécifiques au portages
--- 				 	 		  	ajoutée pour des facilités de traduction
+-- CompatibilitÃ© PHP -> PLSQL : proc. and func. spÃ©cifiques au portages
+-- 				 	 		  	ajoutÃ©e pour des facilitÃ©s de traduction
 ----------------------------------------------------------------------------------
-function ord(pStr varchar2) return number is
+function ord(pStr in varchar2) return number is
 begin
   return ascii(substr(pStr, 1, 1));
 end ord;
@@ -733,17 +734,17 @@ begin
   return false;
 end empty;
 
-function empty (p_mynum number) return boolean is
+function empty (p_mynum in number) return boolean is
 begin
   return empty (p_myvar => to_char(p_mynum));
 end empty;
 
-function str_replace ( psearch varchar2, preplace varchar2, psubject varchar2) return varchar2 is
+function str_replace ( psearch in varchar2, preplace in varchar2, psubject in varchar2) return varchar2 is
 begin
   return replace(psubject, psearch, preplace);
 end str_replace;
 
-function strlen (pstr varchar2) return number is
+function strlen (pstr in varchar2) return number is
 begin
   return length(pstr);
 end strlen;
@@ -771,7 +772,7 @@ begin
    return v_num;
 end;
 
-function tochar(pnum number, pprecision number default 2) return varchar2 is
+function tochar(pnum in number, pprecision in number default 2) return varchar2 is
 mynum word := replace(to_char(pnum),',','.');
 ceilnum word;
 decnum word;
@@ -790,23 +791,23 @@ begin
   return mynum;
 end tochar;
 
-function date_YmdHis (p_date date default sysdate) return varchar2 is
+function date_YmdHis (p_date in date default sysdate) return varchar2 is
 begin
   return to_char(p_date,'YYYYMMDDHH24MISS');
 end date_YmdHis;
 
-function is_string (pstr varchar2) return boolean is
-temp varchar2(2000);
+function is_string (pstr in varchar2) return boolean is
+temp varchar2(500);
 begin
   temp := to_number(pstr);
-  -- Si on passe là c'est que la variable contient un nombre sinon => exception.
+  -- Si on passe lÃ  c'est que la variable contient un nombre sinon => exception.
   return false;
 exception
 when others then
   return true;
 end is_string;
 
-function function_exists (pname varchar2) return boolean is
+function function_exists (pname in varchar2) return boolean is
 begin
   -- Pas de fct fdt de compression zlib sous oracle.
   return false;
@@ -822,20 +823,13 @@ begin
 	 return lower(pstr);
 end strtolower;
 
-function substr_count (ptxt varchar2, pstr varchar2) return number is
-  nbr number := 0;
+function substr_count (ptxt in varchar2, pstr in varchar2) return number is
 begin
-  for i in 1..length(ptxt)
-  loop
-    if (substr(ptxt,i,1) = pstr) then 
-	  nbr := nbr + 1;
-	end if; 
-  end loop;
-  return nbr;
+  return regexp_count(ptxt, pstr);
 end substr_count;
 
 ----------------------------------------------------------------------------------------
---  Traduction des méthodes PHP.
+--  Traduction des mÃ©thodes PHP.
 ----------------------------------------------------------------------------------------
 procedure p_dochecks is
 begin
@@ -846,13 +840,13 @@ end p_dochecks;
 ----------------------------------------------------------------------------------------
 function p_getfontpath return varchar2 is
 begin
-    -- Procedure inutile avec le PLSQL : toutes les fonts sont chargées en mémoire.
+    -- Procedure inutile avec le PLSQL : toutes les fonts sont chargÃ©es en mÃ©moire.
 	return null;
 end p_getfontpath;
 
 ----------------------------------------------------------------------------------------
-procedure p_out(pstr varchar2 default null, pCRLF boolean default true) is 
-lv_CRLF varchar2(2) := null;
+procedure p_out(pstr in varchar2 default null, pCRLF in boolean default true) is 
+lv_CRLF varchar2(2);
 begin
     if (pCRLF) then
 	  lv_CRLF := chr(10);
@@ -882,7 +876,7 @@ exception
 end p_newobj;
 
 ----------------------------------------------------------------------------------------
-function p_escape(pstr varchar2) return varchar2 is
+function p_escape(pstr in varchar2) return varchar2 is
 begin
 	-- Add \ before \, ( and )
   return str_replace(')','\)',str_replace('(','\(',str_replace('\\','\\\\',pstr)));
@@ -890,14 +884,14 @@ begin
 end p_escape;
 
 ----------------------------------------------------------------------------------------
-function p_textstring(pstr varchar2) return varchar2 is
+function p_textstring(pstr in varchar2) return varchar2 is
 begin
 	-- Format a text string
 	return '(' || p_escape(pstr) || ')';
 end p_textstring;
 
 ----------------------------------------------------------------------------------------
-procedure p_putstream(pstr varchar2) is 
+procedure p_putstream(pstr in varchar2) is 
 begin
 	p_out('stream');
 	p_out(pstr);
@@ -910,15 +904,15 @@ end p_putstream;
 ----------------------------------------------------------------------------------------
 procedure p_putstream(pData in out NOCOPY blob) is 
 	offset integer := 1;
-    lv_content_length number := dbms_lob.getlength(pdata);
+  lv_content_length number := dbms_lob.getlength(pdata);
 	buf_size integer := 2000;
-	buf raw(2000);
+	buf varchar2(2000);
 begin
 	p_out('stream');
 	-- read the blob and put it in small pieces in a varchar
 	while offset < lv_content_length loop
 	  dbms_lob.read(pData,buf_size,offset,buf);
-	  p_out(utl_raw.cast_to_varchar2(buf), false);
+	  p_out(buf, false);
 	  offset := offset + buf_size;
 	end loop;
 	-- put a CRLF at te end of the blob
@@ -997,7 +991,6 @@ begin
 	v := FontFiles.first;
 	while (v is not null) 
 	loop
-		null;
 		-- Font file embedding
 		p_newobj();
 		FontFiles(v).n:= n;
@@ -1043,11 +1036,9 @@ begin
 		v := FontFiles.next(v);
 	end loop;
 
-	
 	k := fonts.first;
 	while (k is not null) loop
-	
-	
+
 	--foreach(fonts as $k=>myFont)
 	--{ 
 		-- Font objects
@@ -1465,7 +1456,7 @@ exception
 end p_enddoc;
 
 ----------------------------------------------------------------------------------------
-procedure p_beginpage(orientation varchar2) is
+procedure p_beginpage(orientation in varchar2) is
 Myorientation word := orientation;
 begin
 	page := page + 1;
@@ -1506,7 +1497,7 @@ exception
 end p_beginpage;
 
 ----------------------------------------------------------------------------------------
-function p_dounderline(px number,py number,ptxt varchar2) return varchar2 is
+function p_dounderline(px in number, py in number, ptxt in varchar2) return varchar2 is
 up word := CurrentFont.up;
 ut word := CurrentFont.ut;
 w number := 0;
@@ -1523,7 +1514,7 @@ end p_dounderline;
 -- Function to convert a binary unsigned integer
 -- into a PLSQL number
 --------------------------------------------------------------------------------
-function p_freadint( p_data in varchar2 ) return number
+function p_freadint(p_data in varchar2) return number
 is
     l_number number default 0;
     l_bytes  number default length(p_data);
@@ -1732,11 +1723,10 @@ end p_parseImage;
 --------------------------------------------------------------------------------
 -- Parse an image
 --------------------------------------------------------------------------------
-function p_parseImage(pFile varchar2) return recImage is
+function p_parseImage(pFile in varchar2) return recImage is
   myImg ordsys.ordImage := ordsys.ordImage.init();
   myImgInfo recImage;
   myCtFormat word;
-  colspace word;
   myblob blob;
   chunk_content blob;
   png_signature constant varchar2(8)  := chr(137) || 'PNG' || chr(13) || chr(10) || chr(26) || chr(10);
@@ -1754,16 +1744,10 @@ function p_parseImage(pFile varchar2) return recImage is
   buf varchar2(8192);
   ct word;
   colors pls_integer;
-  n number;
   myType word;
-  NullTabN tn;
-  imgDataStartsHere number;
-  imgDataStopsHere number;
-  nb_chuncks number;
   ---------------------------------------------------------------------------------------------
   function freadb(pBlob in out nocopy blob, pHandle in out number, pLength in out number) return raw is
     l_data_raw  raw(8192);
-    l_hdr_size  number default 2000;
   begin
     dbms_lob.read(pBlob, pLength, pHandle, l_data_raw);
     pHandle := pHandle + pLength;
@@ -1907,9 +1891,9 @@ end p_parseImage;
 -- Methods added to FPDF primary class
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------
--- SetDash Ecrire en pointillés
+-- SetDash Ecrire en pointillÃ©s
 ----------------------------------------------------------------------------------------
-procedure SetDash(pblack number default 0, pwhite number default 0) is
+procedure SetDash(pblack in number default 0, pwhite in number default 0) is
   s txt;
 begin
     if(pblack != 0 or pwhite != 0) then
@@ -1924,7 +1908,7 @@ end SetDash;
 -- Methods from FPDF primary class
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------
-procedure Error(pmsg varchar2) is
+procedure Error(pmsg in varchar2) is
 begin
     if gb_mode_debug then
 	  print('<pre>');
@@ -1960,7 +1944,6 @@ begin
 	return FontFamily;
 end GetCurrentFontFamily;
 
-
 ----------------------------------------------------------------------------------------
 procedure Ln(h number default null) is
 begin
@@ -1981,7 +1964,7 @@ begin
 end GetX;
 
 ----------------------------------------------------------------------------------------
-procedure SetX(px number) is
+procedure SetX(px in number) is
 begin
 	-- Set x position
 	if(px>=0) then 
@@ -1999,7 +1982,7 @@ begin
 end GetY;
 
 ----------------------------------------------------------------------------------------
-procedure SetY(py number) is 
+procedure SetY(py in number) is 
 begin
 	-- Set y position and reset x
 	x:=lMargin;
@@ -2011,7 +1994,7 @@ begin
 end SetY;
 
 ----------------------------------------------------------------------------------------
-procedure SetXY(x number,y number) is 
+procedure SetXY(x in number,y in number) is 
 begin
 	-- Set x and y positions
 	SetY(y);
@@ -2037,7 +2020,7 @@ begin
 end;
 
 ----------------------------------------------------------------------------------------
-procedure SetMargins(left number,top number ,right number default -1) is 
+procedure SetMargins(left in number, top in number, right in number default -1) is 
 myright margin := right;
 begin
 	-- Set left, top and right margins
@@ -2050,7 +2033,7 @@ begin
 end SetMargins;
 
 ----------------------------------------------------------------------------------------
-procedure SetLeftMargin( pMargin number) is 
+procedure SetLeftMargin(pMargin in number) is
 begin
 	-- Set left margin
 	lMargin:=pMargin;
@@ -2060,21 +2043,21 @@ begin
 end SetLeftMargin;
 
 ----------------------------------------------------------------------------------------
-procedure SetTopMargin(pMargin number) is
+procedure SetTopMargin(pMargin in number) is
 begin
 	-- Set top margin
 	tMargin := pMargin;
 end SetTopMargin;
 
 ----------------------------------------------------------------------------------------
-procedure SetRightMargin(pMargin number) is 
+procedure SetRightMargin(pMargin in number) is 
 begin
 	-- Set right margin
 	rMargin := pMargin;
 end SetRightMargin;
 
 ----------------------------------------------------------------------------------------
-procedure SetAutoPageBreak(pauto boolean, pMargin number default 0) is  
+procedure SetAutoPageBreak(pauto in boolean, pMargin in number default 0) is  
 begin
 	-- Set auto page break mode and triggering margin
 	AutoPageBreak := pauto;
@@ -2083,7 +2066,7 @@ begin
 end SetAutoPageBreak;
 
 ----------------------------------------------------------------------------------------
-procedure SetDisplayMode(zoom varchar2,layout varchar2 default 'continuous') is
+procedure SetDisplayMode(zoom in varchar2, layout in varchar2 default 'continuous') is
 begin
 	-- Set display mode in viewer
 	if(zoom in ('fullpage', 'fullwidth', 'real', 'default') or not is_string(zoom)) then
@@ -2099,7 +2082,7 @@ begin
 end SetDisplayMode;
 
 ----------------------------------------------------------------------------------------
-procedure SetCompression(p_compress boolean default false) is
+procedure SetCompression(p_compress in boolean default false) is
 begin
 	-- Set page compression
 	if(function_exists('gzcompress')) then
@@ -2110,42 +2093,42 @@ begin
 end SetCompression;
 
 ----------------------------------------------------------------------------------------
-procedure SetTitle(ptitle varchar2) is
+procedure SetTitle(ptitle in varchar2) is
 begin
 	-- Title of document
 	title:=ptitle;
 end SetTitle;
 
 ----------------------------------------------------------------------------------------
-procedure SetSubject(psubject varchar2) is
+procedure SetSubject(psubject in varchar2) is
 begin
 	-- Subject of document
 	subject:= psubject;
 end SetSubject;
 
 ----------------------------------------------------------------------------------------
-procedure SetAuthor(pauthor varchar2) is
+procedure SetAuthor(pauthor in varchar2) is
 begin
 	-- Author of document
 	author:=pauthor;
 end SetAuthor;
 
 ----------------------------------------------------------------------------------------
-procedure SetKeywords(pkeywords varchar2) is
+procedure SetKeywords(pkeywords in varchar2) is
 begin
 	-- Keywords of document
 	keywords:=pkeywords;
 end SetKeywords;
 
 ----------------------------------------------------------------------------------------
-procedure SetCreator(pcreator varchar2) is
+procedure SetCreator(pcreator in varchar2) is
 begin
 	-- Creator of document
 	creator:=pcreator;
 end SetCreator;
 
 ----------------------------------------------------------------------------------------
-procedure SetAliasNbPages(palias varchar2 default '{nb}') is
+procedure SetAliasNbPages(palias in varchar2 default '{nb}') is
 begin
 	-- Define an alias for total number of pages
 	AliasNbPages:=palias;
@@ -2156,7 +2139,7 @@ end SetAliasNbPages;
 -- buildPlsqlStatment : building the pl/lsq stmt for header or Footer hooked custom proc
 --                      Binding parameters and values.
 ----------------------------------------------------------------------------------------
-function buildPlsqlStatment(callbackProc varchar2, tParam tv4000a default noParam) return varchar2 is
+function buildPlsqlStatment(callbackProc in varchar2, tParam in tv4000a default noParam) return varchar2 is
     plsqStmt bigtext;
     paramName word;
 begin
@@ -2223,7 +2206,7 @@ begin
 end PageNo;
 
 ----------------------------------------------------------------------------------------
-procedure SetDrawColor(r number,g number default -1,b number default -1) is
+procedure SetDrawColor(r in number, g in number default -1, b in number default -1) is
 begin
 	-- Set color for all stroking operations
 	if((r=0 and g=0 and b=0) or g=-1)  then 
@@ -2237,7 +2220,7 @@ begin
 end SetDrawColor;
 
 ----------------------------------------------------------------------------------------
-procedure SetFillColor (r number,g number default -1,b number default -1) is
+procedure SetFillColor (r in number, g in number default -1, b in number default -1) is
 begin
 	-- Set color for all filling operations
 	if((r=0 and g=0 and b=0) or g=-1) then
@@ -2256,7 +2239,7 @@ begin
 end SetFillColor;
 
 ----------------------------------------------------------------------------------------
-procedure SetTextColor (r number,g number default -1,b number default -1) is
+procedure SetTextColor (r in number, g in number default -1, b in number default -1) is
 begin
 	-- Set color for text
 	if((r=0 and g=0 and b=0) or g=-1) then
@@ -2272,7 +2255,7 @@ begin
 end SetTextColor;
 
 ----------------------------------------------------------------------------------------
-procedure SetLineWidth(width number) is 
+procedure SetLineWidth(width in number) is 
 begin
 	-- Set line width
 	LineWidth:=width;
@@ -2282,7 +2265,7 @@ begin
 end SetLineWidth;
 
 ----------------------------------------------------------------------------------------
-procedure Line(x1 number,y1 number,x2 number,y2 number) is 
+procedure Line(x1 in number, y1 in number, x2 in number, y2 in number) is 
 begin
 	-- Draw a line
 	p_out( tochar(x1*k,2) || 
@@ -2293,7 +2276,7 @@ end Line;
 
 
 ----------------------------------------------------------------------------------------
-procedure Rect(px number,py number,pw number,ph number,pstyle varchar2 default '') is
+procedure Rect(px in number, py in number, pw in number, ph in number, pstyle in varchar2 default '') is
 op word;
 begin
 	-- Draw a rectangle
@@ -2308,8 +2291,8 @@ begin
 end Rect;
 
 ----------------------------------------------------------------------------------------
-procedure Triangle(px number, py number, psize number, 
-                   porientation varchar default 'left', pstyle varchar2 default '') is
+procedure Triangle(px in number, py in number, psize in number, 
+                   porientation in varchar2 default 'left', pstyle varchar2 default '') is
 point_1 point;
 point_2 point;
 point_3 point;
@@ -2333,7 +2316,7 @@ begin
 end;
 
 ----------------------------------------------------------------------------------------
-procedure Poly(points tab_points, pclose boolean, pstyle varchar2 default '') is
+procedure Poly(points in tab_points, pclose in boolean, pstyle in varchar2 default '') is
 op word;
 pdf_cmd varchar2(1000);
 begin
@@ -2362,7 +2345,7 @@ begin
 end;
 
 ----------------------------------------------------------------------------------------
-procedure SetLineDashPattern(pdash varchar2 default '[] 0') is
+procedure SetLineDashPattern(pdash in varchar2 default '[] 0') is
 begin
     p_out(pdash || ' d');
 end;
@@ -2432,7 +2415,7 @@ begin
 end AddLink;
 
 ----------------------------------------------------------------------------------------
-procedure SetLink(plink number,py number default 0,ppage number default -1) is
+procedure SetLink(plink in number, py in number default 0, ppage in number default -1) is
 mypy number := py;
 myppage number := ppage;
 begin
@@ -2448,7 +2431,7 @@ begin
 end SetLink;
 
 ----------------------------------------------------------------------------------------
-procedure Link(px number,py number,pw number,ph number,plink varchar2) is
+procedure Link(px in number, py in number, pw in number, ph in number, plink in varchar2) is
   v_last_plink integer;
   v_ntoextend integer;
   v_rec rec5;
@@ -2477,7 +2460,7 @@ end Link;
 
 
 ----------------------------------------------------------------------------------------
-procedure Text(px number,py number,ptxt varchar2) is
+procedure Text(px in number, py in number, ptxt in varchar2) is
 s varchar2(2000);
 begin
 	-- Output a string
@@ -2533,7 +2516,7 @@ begin
 end ClosePDF;
 
 ----------------------------------------------------------------------------------------
-procedure AddPage(orientation varchar2 default '') is 
+procedure AddPage(orientation in varchar2 default '') is 
 myFamily txt;
 myStyle txt;
 mySize number := fontsizePt;
@@ -2738,7 +2721,7 @@ begin
 end fpdf;
 
 ----------------------------------------------------------------------------------------
-procedure AddFont (family varchar2, style varchar2 default '',filename varchar2 default '') is
+procedure AddFont (family in varchar2, style in varchar2 default '', filename in varchar2 default '') is
   myfamily word := family;
   mystyle  word := style;
   myfile   word := filename;
@@ -2748,7 +2731,7 @@ procedure AddFont (family varchar2, style varchar2 default '',filename varchar2 
   d pls_integer;
   nb pls_integer;
   myDiff varchar2(2000);
-  myType varchar2(256); -- ????????? Cette variable est peut-être globale ????????????
+  myType varchar2(256); -- ????????? Cette variable est peut-Ãªtre globale ????????????
   -- tabNull tv4000;
 begin
 	-- Add a TrueType or Type1 font
@@ -2768,9 +2751,8 @@ begin
 	if(fonts.exists(fontkey)) then
 		Error('Font already added: ' || myfamily || ' ' || mystyle);
 	end if; 
-    
+
 	p_includeFont(fontkey);
-	
 
 	fontCount:=nvl(fonts.count, 0) + 1;
 
@@ -2811,7 +2793,7 @@ begin
 end AddFont;
 
 ----------------------------------------------------------------------------------------
-procedure SetFont(pfamily varchar2,pstyle varchar2 default '',psize number default 0) is
+procedure SetFont(pfamily in varchar2, pstyle in varchar2 default '', psize in number default 0) is
 myfamily word := pfamily;
 mystyle	 word := pstyle;
 mysize	 number := psize;
@@ -2854,7 +2836,6 @@ begin
 	
 	-- Test if used for the first time	
 	fontkey:=nvl(myfamily || mystyle, '');
-
 
 	--if(not fontsExists(fontkey)) then
 	if(not fonts.exists(fontkey)) then
@@ -2905,7 +2886,7 @@ end SetFont;
 
 
 ----------------------------------------------------------------------------------------
-function GetStringWidth(pstr varchar2) return number is
+function GetStringWidth(pstr in varchar2) return number is
 charSetWidth CharSet;
 w number;
 lg number;
@@ -2918,7 +2899,6 @@ begin
 	lg := strlen(pstr);
 	for i in 1..lg
 	loop
-	    wdth := 0;
 		c := substr(pstr,i,1);
 	    --if (charSetWidth.exists(c)) then
 		  wdth := charSetWidth(c);
@@ -2930,7 +2910,7 @@ end GetStringWidth;
 
 
 ----------------------------------------------------------------------------------------
-procedure SetFontSize(psize number) is
+procedure SetFontSize(psize in number) is
 begin
 	-- Set font size in points
 	if(fontsizePt=psize) then
@@ -2945,14 +2925,14 @@ end SetFontSize;
 
 ----------------------------------------------------------------------------------------
 procedure Cell
-		 (pw number,
-		  ph number default 0,
-		  ptxt varchar2 default '',
-		  pborder varchar2 default '0',
-		  pln number default 0,
-		  palign varchar2 default '',
-		  pfill number default 0,
-		  plink varchar2 default '') is
+		 (pw in number,
+		  ph in number default 0,
+		  ptxt in varchar2 default '',
+		  pborder in varchar2 default '0',
+		  pln in number default 0,
+		  palign in varchar2 default '',
+		  pfill in number default 0,
+		  plink in varchar2 default '') is
  myPW number := pw;
  myK k%type := k;
  myX x%type := x;
@@ -3063,13 +3043,13 @@ end Cell;
 -- if ph is null : the minimum height is the value of the property LineSpacing
 ----------------------------------------------------------------------------------------
 function MultiCell
-  ( pw number,
-    ph number default 0,
-	ptxt varchar2,
-	pborder varchar2 default '0',
-	palign varchar2 default 'J',
-	pfill number default 0,
-	phMax number default 0) return number is
+  ( pw in number,
+    ph in number default 0,
+	ptxt in varchar2,
+	pborder in varchar2 default '0',
+	palign in varchar2 default 'J',
+	pfill in number default 0,
+	phMax in number default 0) return number is
 	
   charSetWidth CharSet;
   myPW number := pw;
@@ -3155,7 +3135,7 @@ begin
 			if(myBorder is not null and nl = 2) then
 				myB := myB2;
 			end if; 
-			-- si on passe là on continue à la prochaine itération de la boucle 
+			-- si on passe lÃ  on continue Ã  la prochaine itÃ©ration de la boucle 
 			-- en PHP il y avait l'instruction "continue" .
 			lb_skip := true;
 		end if; 
@@ -3251,13 +3231,13 @@ end MultiCell;
 -- if ph is null : the minimum height is the value of the property LineSpacing
 ----------------------------------------------------------------------------------------
 procedure MultiCell
-  ( pwidth number,
-    pheight number default 0,
-    ptext varchar2,
-    pbrdr varchar2 default '0',
-    palignment varchar2 default 'J',
-    pfillin number default 0,
-    phMaximum number default 0) is
+  ( pwidth in number,
+    pheight in number default 0,
+    ptext in varchar2,
+    pbrdr in varchar2 default '0',
+    palignment in varchar2 default 'J',
+    pfillin in number default 0,
+    phMaximum in number default 0) is
     
    ln_ignore number;
 begin
@@ -3268,13 +3248,13 @@ end multicell;
 
 
 ----------------------------------------------------------------------------------------
-procedure image ( pFile varchar2, 
-		  		  pX number, 
-				  pY number, 
-				  pWidth number default 0,
-				  pHeight number default 0,
-				  pType varchar2 default null,
-				  pLink varchar2 default null) is
+procedure image ( pFile in varchar2, 
+		  		  pX in number, 
+				  pY in number, 
+				  pWidth in number default 0,
+				  pHeight in number default 0,
+				  pType in varchar2 default null,
+				  pLink in varchar2 default null) is
 				  
    myFile varchar2(2000) := pFile;
    -- myType varchar2(256) := pType;
@@ -3524,9 +3504,9 @@ end testImg;
 -- test :  Generic Testing proc. Put here what you want !
 -------------------------------------------- --------------------------------------------
 procedure test(pdest varchar2 default 'D') is
-  myImgInfo recImage;
+  --myImgInfo recImage;
   img varchar2(2000);
-  someTxt bigtext;
+  --someTxt bigtext;
 begin
 	FPDF('P','cm','A4');
 	openpdf;
@@ -3536,12 +3516,12 @@ begin
 	SetTextColor(132,0,132);
 	
 /* TEST HELLOWORD */
-	Cell(0,1.2,'(Helloworld avec des parenthèses !)',0,1,'C');
+	Cell(0,1.2,'(Helloworld avec des parenthÃ¨ses !)',0,1,'C');
 
    
 /*
  -- Test image
-   print('Test de chargement d''une image à partir d''une url...<br>');
+   print('Test de chargement d''une image Ã  partir d''une url...<br>');
    --img := '/v2/images/b2i/fonds/fd_livret_college.png';
    img := '/v2/images/picto_laclassev2.png';
    --img := '/v2/images/picto_calendar.jpg';
@@ -3572,11 +3552,11 @@ begin
  --img := '/v2/images/picto_laclassev2.png';
  
  Image(img,1, 1, 10);
- Cell(0,1.2,'Validation des compétences du B2i',0,1,'C');
+ Cell(0,1.2,'Validation des compÃ©tences du B2i',0,1,'C');
  
 /*
   AddPage();
-  Cell(0,1.2,'Validation des compétences du B2i page 2',0,1,'C');
+  Cell(0,1.2,'Validation des compÃ©tences du B2i page 2',0,1,'C');
   
   /*
   someTxt := 'some Texte some Texte some Texte some Texte some Texte some Texte some Texte some Texte ';
@@ -3615,13 +3595,13 @@ begin
 end MyRepetitiveFooter;
 
 --------------------------------------------------------------------------------
--- Affiche le numéro de page en base de page
+-- Affiche le numÃ©ro de page en base de page
 --------------------------------------------------------------------------------
 procedure lpc_footer is
 begin
     if(PageNo != 1) then
         SetTextColor(88, 90, 90);
-        -- Le numéro de la page courante est en gras
+        -- Le numÃ©ro de la page courante est en gras
         SetFont('helvetica','B',12);
         Text(18, 29.3, PageNo);
         -- Le reste normal
@@ -3635,7 +3615,6 @@ end;
 -- testHeader :  Proc that illustrates how to call header and footer hooks.
 ----------------------------------------------------------------------------------------
 procedure testHeader is
- img varchar2(2000);
  tHdr tv4000a; -- This is a table for the custom header proc hooked
 begin
     -- setting parameter values for proc 'MyRepetitiveHeader'
