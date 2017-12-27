@@ -1,9 +1,9 @@
-CREATE OR REPLACE PACKAGE PL_FPDF AS
+create or replace PACKAGE PL_FPDF AS
 /*******************************************************************************
 * Logiciel : PL_FPDF                                                           *
-* Version :  0.9.3                                                             *
-* Date :     13/06/2006                                                        *
-* Auteur :   Pierre-Gilles Levallois                                           *
+* Version :  0.9.4                                                             *
+* Date :     27-Dec-2017                                                       *
+* Auteur :   Pierre-Gilles Levallois et al                                          *
 * Licence :  GPL                                                               *
 *                                                                              *
 ********************************************************************************
@@ -36,7 +36,7 @@ type tab_points is table of point index by pls_integer;
 
 -- Constantes globales
 FPDF_VERSION constant varchar2(10) := '1.53'; 
-PL_FPDF_VERSION constant varchar2(10) := '0.9.3'; 
+PL_FPDF_VERSION constant varchar2(10) := '0.9.4'; 
 noParam tv4000a;
 
 -- methods added to FPDF
@@ -132,6 +132,7 @@ procedure image ( pFile in varchar2,
 				  pLink in varchar2 default null);
 				  
 procedure Output(pname in varchar2 default null, pdest in varchar2 default null);
+function ReturnBlob(pname in varchar2 default null, pdest in varchar2 default null) return blob;
 
 procedure OpenPDF;
 procedure ClosePDF;
@@ -158,4 +159,3 @@ procedure testHeader;
 procedure lpc_footer;
 
 END PL_FPDF;
-/
