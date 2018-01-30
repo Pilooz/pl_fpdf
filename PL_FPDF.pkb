@@ -1,9 +1,9 @@
-CREATE OR REPLACE PACKAGE BODY PL_FPDF AS
+create or replace PACKAGE BODY                          PL_FPDF AS
 /*******************************************************************************
 * Logiciel : PL_FPDF                                                           *
-* Version :  0.9.3                                                             *
-* Date :     13/06/2006                                                        *
-* Auteur :   Pierre-Gilles Levallois                                           *
+* Version :  0.9.4                                                             *
+* Date :     27-Dec-2017                                                       *
+* Auteur :   Pierre-Gilles Levallois et al                              *
 * Licence :  GPL                                                               *
 *                                                                              *
 ********************************************************************************
@@ -39,6 +39,10 @@ CREATE OR REPLACE PACKAGE BODY PL_FPDF AS
     0.9.1 -> 0.9.2 : 
         - Added procedure helloword Example.
         - Added procedure testImg Example.
+		
+	0.9.3 -> 0.9.4 :
+		- Added function ReturnBlob
+		- Slight amendment to procedure fpdf to boost performance
 
 *******************************************************************************/
 
@@ -2611,6 +2615,7 @@ begin
 	page:=0;
 	n:=2;
 	-- Open the final structure for the PDF document.
+  pdfDoc.delete(); --  Line added per this thread: https://github.com/Pilooz/pl_fpdf/issues/1
 	pdfDoc(1) := null;
 	state:=0;
 	InFooter:=false;
@@ -2717,7 +2722,7 @@ begin
 	-- Disable compression
 	SetCompression(false);
 	-- Set default PDF version number
-	PDFVersion:='1.3';
+	PDFVersion:='1.3.1';
 end fpdf;
 
 ----------------------------------------------------------------------------------------
@@ -3466,7 +3471,58 @@ exception
    when others then
       error('Output : '||sqlerrm);
 end Output;
- 
+
+function ReturnBlob(pname in varchar2 default null, pdest in varchar2 default null)
+return blob is
+myName word := pname;
+myDest word := pdest;
+v_doc blob; -- finally complete document
+v_blob blob;
+v_clob clob;
+v_in pls_integer;
+v_out pls_integer;
+v_lang pls_integer;
+v_warning pls_integer;
+v_len pls_integer;
+begin
+dbms_lob.createtemporary(v_blob, false, dbms_lob.session);
+dbms_lob.createtemporary(v_doc, false, dbms_lob.session);
+-- Output PDF to some destination
+-- Finish document if necessary
+if state < 3 then
+ClosePDF();
+end if;
+myDest := strtoupper(myDest);
+if(myDest is null) then
+if(myName is null) then
+myName := 'doc.pdf';
+myDest := 'I';
+else
+myDest := 'D';
+end if;
+end if;
+
+-- restitution du contenu...
+  v_len := 1;
+  for i in pdfDoc.first..pdfDoc.last loop
+     v_clob := to_clob(pdfDoc(i));
+     if v_clob is not null then
+        v_in := 1;
+        v_out := 1;
+        v_lang := 0;
+        v_warning := 0;
+        v_len := dbms_lob.getlength(v_clob);
+        dbms_lob.convertToBlob(v_blob, v_clob, v_len,
+           v_in, v_out, dbms_lob.default_csid, v_lang, v_warning);
+        dbms_lob.append(v_doc, dbms_lob.substr(v_blob, v_len));
+     end if;
+  end loop;
+ -- wpg_docload.download_file(v_doc);
+  return(v_doc);
+exception
+when others then
+error('ReturnBlob : '||sqlerrm);
+end ReturnBlob;
  
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------
@@ -3642,4 +3698,3 @@ end testHeader;
 
 
 END PL_FPDF;
-/
